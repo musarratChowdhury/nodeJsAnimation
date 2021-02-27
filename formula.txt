@@ -1,0 +1,13 @@
+Suppose the server side countdown is 'x', the client side countdown is 'y';
+
+so the relation is ,
+
+     (96+(x*4.5))/100=y;
+
+   for example if x=1;
+       y =  96+(1*4.5)/100=100/100=1.00
+
+       if you want y = 30.00;
+
+       x = ((y*100)-96)/4.5 = ((30*100)-96)/4.5 = 645.33;
+   so, you can put x=646 to get a countdown to 30.00;

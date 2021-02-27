@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+    <title>Animation Bus</title>
+
+    <style>
+        #gameCanvas{
+            width: 100%;
+          }
+        .canvas-container{
+            width: 650px;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-container" >
+        <canvas id="gameCanvas" width="600px" height="500px" style="border: 2px solid;"></canvas>
+    </div>
+  
+
+    <!-- <button onclick="send()">click here to send msg</button> -->
+
+    <script>
+     const socket = io();
+     const canvas = document.getElementById('gameCanvas')
+     const ctx =canvas.getContext('2d');
+     ctx.fillStyle='red';
+     
+
+     //variables
+     const CANVAS_WIDTH=canvas.width;
+     const CANVAS_HEIGHT=canvas.height;
+     let busW=332*0.0009259*CANVAS_WIDTH
+    let busH=303*CANVAS_HEIGHT*0.00131
+
+    var leftroad=[]
+     
+     let spritesheetW=39960;
+     let spritesheetH=764;
+     
+     let row =1;
+    
+     
+     let height = spritesheetH/row;
+    
+     
+     //variables
+
+    
+     
+     socket.on('servermessage',(data)=>{
+         console.log(data);//receiving player id
+         socket.emit('message',{width:CANVAS_WIDTH,height:CANVAS_HEIGHT})
+     })
+     socket.on('newposition',(data)=>{//reciving new position for every frame on canvas
+         ctx.clearRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT);
+         road.draw()
+      
+        
+         
+        data.forEach(element => {//drawing according to the data received from the server!!
+          spriteview.draw(element.frameNo)
+          treesprite.draw(element.updatedFrameNo5)
+            whitestrips.draw(element.frameNo2)
+            
+                bus.draw2(element.frameNo3,element.b_x,element.b_y,element.b_w,element.b_h)
+           
+            if(element.busImgChange>0){//changing the bus image according to the data sent from the server!!
+                switch(element.busImgChange){
+                    case 1: bus.draw3(element.b_x,element.b_y-15,element.b_w+15,element.b_h+25)
+                            break;
+                    case 2: bus4.draw(element.updatedFrameNo4)
+                            break;
+                    case 3:bus.draw3(element.b_x,element.b_y-15,element.b_w+15,element.b_h+25)
+                            break;
+                    case 4:bus.draw4(element.accidentX)
+                    break;
+                }
+               
+            }
+            leftbusStop.draw2(element.x,element.y)
+            rightbusStop.draw2(element.x2,element.y2)
+            zebra.draw3(element.x3,element.y3,element.width,element.height)
+            if(element.p_x){
+                police.draw3(element.p_x,element.p_y,element.p_w,element.p_h)
+                console.log('traffic police appeared')
+            }
+            if(element.ph_x){
+                pothole.draw3(element.ph_x,element.ph_y,element.ph_w,element.ph_h)
+                console.log('pothole appears!')
+            }
+            if(element.busImgChange==2){
+                console.log('overheating!')
+            }
+            if(element.busImgChange==3){
+                console.log('flarTyre!')
+            }
+            if(element.eventBolean){
+                console.log('accident!')
+            }
+            if(element.eventBolean2){
+                console.log('bus Stop Left')
+            }
+            if(element.eventBolean3){
+                console.log('bus Stop Right')
+            }
+            if(element.eventBolean4)console.log('trafficLight Stop!')
+           
+           
+
+            if(element.preloaderDraw){
+                let timer =element.preloaderTimer/5;
+                transparent.draw()
+                drawTxt(`Please Wait For the Next Round! ${(10-timer).toFixed()}`,CANVAS_WIDTH/2-200,CANVAS_HEIGHT/2,'30px serif')
+            }
+            if(element.countdown){
+                
+                console.log(((96+element.countdown)/100).toFixed(2))//animation countdown
+            }
+             
+            
+           // ctx.fillRect(element.x,element.y,50,50
+          // console.log(element.b_x,element.b_y,element.b_w)
+       });
+   
+         
+     })
+
+   
+
+ 
+
+     class drawImage{
+    constructor(srcX,srcY,swidth,sheight,x,y,width,height,col,src){
+        this.srcX = srcX;
+        this.srcY = srcY;
+        this.swidth = swidth;
+        this.sheight =sheight;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.col =col
+        this.framecount = 9;
+        
+        this.image = new Image()
+        this.image2 = new Image()
+        this.image3 = new Image()
+        this.image.src = src;
+        this.image2.src = './client/img/flattyre.png';
+        this.image3.src = './client/img/accident.png'
+    }
+    draw(curFrame){
+        this.srcX =curFrame * this.swidth; 
+        ctx.drawImage(this.image,this.srcX,this.srcY,this.swidth,this.sheight,this.x,this.y,this.width,this.height)
+    }
+    draw2(curFrame,x,y,w,h){
+        this.srcX =curFrame * this.swidth; 
+        ctx.drawImage(this.image,this.srcX,this.srcY,this.swidth,this.sheight,x,y,w,h)
+    }
+    draw3(x,y,w,h){
+        ctx.drawImage(this.image2,x,y,w,h)
+    }
+    draw4(x){
+        ctx.drawImage(this.image3,x,this.y,this.width+20,this.height);
+    }
+  }
+  class imageMaker{
+    constructor(x,y,width,height,src){
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.image = new Image();
+        this.image.src = src;
+    }
+    draw(){
+        ctx.drawImage(this.image,this.x,this.y,this.width,this.height)
+    }
+    draw2(x,y){
+        ctx.drawImage(this.image,x,y,this.width,this.height)
+    }
+    draw3(x,y,width,height){
+        ctx.drawImage(this.image,x,y,width,height)
+    }
+    scale(){
+        this.x-=0.15;
+        this.width+=0.3;
+        this.height+=0.05;
+    }
+    move(){
+        this.y+=vms/2;
+        if(this.y>40){
+            this.y=0
+        }
+    }
+
+  
+  }//class imagemaker
+  
+  function drawTxt(txt,x,y,font) {
+  ctx.font = font;
+  ctx.fillStyle='black';
+  ctx.fillText(txt, x, y);
+ }
+  //defining variables
+
+
+
+  spriteview = new drawImage(0,0,spritesheetW/37,height,0,0,CANVAS_WIDTH,CANVAS_HEIGHT,37,'./client/img/spritesheet2.png')
+  road = new imageMaker(0,0,CANVAS_WIDTH,CANVAS_HEIGHT,'./client/img/bg2floor.png')
+  bus = new drawImage(0,0,12256/8,1426,398*0.0009259*CANVAS_WIDTH,444*CANVAS_HEIGHT*0.00131,busW,busH,8,'./client/img/bus/spritesheet.png')
+  
+  whitestrips = new drawImage(0,0,8640/8,763,0,0,CANVAS_WIDTH,CANVAS_HEIGHT,8,'./client/img/whitesheet.png')
+//   treeRight = new imageMaker(0,0,CANVAS_WIDTH,CANVAS_HEIGHT,'./client/img/fillertree.png')
+//  treeLeft= new imageMaker(0,0,CANVAS_WIDTH,CANVAS_HEIGHT,'./client/img/fillertree2.png')
+  leftbusStop =  new imageMaker(0,0,CANVAS_WIDTH,CANVAS_HEIGHT,'./client/img/tjunwbustand.png');
+  rightbusStop = new imageMaker(0,0,CANVAS_WIDTH,CANVAS_HEIGHT,'./client/img/tjunwbustand2.png');
+  zebra = new imageMaker(0,0,CANVAS_WIDTH,CANVAS_HEIGHT,'./client/img/zebra2.png');
+  police = new imageMaker(0,0,CANVAS_WIDTH,CANVAS_HEIGHT,'./client/img/trafficPolice.png')
+  pothole = new imageMaker(0,0,CANVAS_WIDTH,CANVAS_HEIGHT,'./client/img/potholes.png')
+  transparent =new imageMaker(0,0,CANVAS_WIDTH,CANVAS_HEIGHT,'./client/img/transparent.png')
+  bus4 = new drawImage(0,0,2186/6,479,350*0.0009259*CANVAS_WIDTH,265*CANVAS_HEIGHT*0.00131,busW+30,busH+120,6,'./client/img/smokesprite.png')
+  treesprite = new drawImage(0,0,9720/9,763,0,0,CANVAS_WIDTH,CANVAS_HEIGHT,9,'./client/img/treeSprite.png')
+  
+    </script>
+</body>
+</html>
